@@ -3,6 +3,8 @@ package sample;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -13,6 +15,7 @@ public class JPad extends JFrame {
     private static final String DEFAULT_TITLE = "Untitled - JPad";
     private static final String SAVE_CHANGES = "Save changes?";
     private static final String TITLE_AYS = "Are you sure?";
+    private static final String DEFAULT_STATUS = "JPad 1.0";
     private JLabel lbl;
     private JTextArea ta;
     private boolean fDirty;
@@ -54,6 +57,25 @@ public class JPad extends JFrame {
         JMenuItem miExit = new JMenuItem("Exit");
         mFile.add(miExit);
 
+        MenuListener ml;
+        ml = new MenuListener() {
+            @Override
+            public void menuSelected(MenuEvent e) {
+                lbl.setText("New doc|Open existing doc|Save changes|Exit");
+            }
+
+            @Override
+            public void menuDeselected(MenuEvent e) {
+                lbl.setText(DEFAULT_STATUS);
+            }
+
+            @Override
+            public void menuCanceled(MenuEvent e) {
+
+            }
+        };
+        mFile.addMenuListener(ml);
+
         mb.add(mFile);
 
         JMenu mFormat = new JMenu("Format");
@@ -82,7 +104,7 @@ public class JPad extends JFrame {
         };
         ta.getDocument().addDocumentListener(dl);
 
-        getContentPane().add(lbl = new JLabel("JPad 1.0"), BorderLayout.SOUTH);
+        getContentPane().add(lbl = new JLabel(DEFAULT_STATUS), BorderLayout.SOUTH);
         setSize(400, 400);
         setTitle(DEFAULT_TITLE);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
