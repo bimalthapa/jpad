@@ -1,18 +1,21 @@
 package sample;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 
 public class JPad extends JFrame {
 
     private static final String DEFAULT_TITLE = "Untitled - JPad";
+    private static final String SAVE_CHANGES = "Save changes?";
+    private static final String TITLE_AYS = "Are you sure?";
     private JLabel lbl;
     private JTextArea ta;
+    private boolean fDirty;
 
     public JPad(String[] args) {
 
@@ -20,6 +23,21 @@ public class JPad extends JFrame {
         JMenu mFile = new JMenu("File");
         JMenuItem miNew = new JMenuItem("New");
         miNew.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_MASK));
+        ActionListener al;
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (fDirty) {
+                    switch (JOptionPane.showConfirmDialog(JPad.this, SAVE_CHANGES, TITLE_AYS, JOptionPane.YES_NO_OPTION)) {
+                        case JOptionPane.YES_OPTION: if (doSave()) doNew(); break;
+                        case JOptionPane.NO_OPTION: doNew();
+                    }
+                } else {
+                    doNew();
+                }
+            }
+        };
+        miNew.addActionListener(al);
         mFile.add(miNew);
 
         JMenuItem miOpen = new JMenuItem("Open");
@@ -46,6 +64,24 @@ public class JPad extends JFrame {
         setJMenuBar(mb);
 
         getContentPane().add(new JScrollPane(ta = new JTextArea()));
+        DocumentListener dl;
+        dl = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                fDirty = true;
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                fDirty = true;
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+            }
+        };
+        ta.getDocument().addDocumentListener(dl);
+
         getContentPane().add(lbl = new JLabel("JPad 1.0"), BorderLayout.SOUTH);
         setSize(400, 400);
         setTitle(DEFAULT_TITLE);
@@ -79,7 +115,9 @@ public class JPad extends JFrame {
 
     private void doNew() {}
 
-    private void doSave() {}
+    private boolean doSave() {
+        return true;
+    }
 
     private void doSaveAs() {}
 
