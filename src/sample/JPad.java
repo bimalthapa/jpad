@@ -4,7 +4,9 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.undo.UndoManager;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
@@ -16,11 +18,14 @@ public class JPad extends JFrame {
     private static final String TITLE_AYS = "Are you sure?";
     private static final String DEFAULT_STATUS = "JPad 1.0";
     private final JFileChooser fc;
+    private final Clipboard cb;
+    private final UndoManager um;
     private JLabel lbl;
     private JTextArea ta;
     private boolean fDirty;
 
     public JPad(String[] args) {
+        cb = Toolkit.getDefaultToolkit().getSystemClipboard();
 
         fc = new JFileChooser(".");
         FileFilter ff = new FileNameExtensionFilter("TXT documents (*.txt)", "txt");
@@ -89,6 +94,17 @@ public class JPad extends JFrame {
 
         mb.add(mFile);
         JMenu mEdit = new JMenu("Edit");
+        final JMenuItem miUndo = new JMenuItem("Undo");
+        miUndo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_MASK));
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                um.undo();
+            }
+        };
+        miUndo.addActionListener(al);
+        mEdit.add(miUndo);
+        mEdit.addSeparator();
 
         final JMenuItem miCut = new JMenuItem("Cut");
         miCut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_MASK));
@@ -115,6 +131,24 @@ public class JPad extends JFrame {
         };
         miCopy.addActionListener(al);
         mEdit.add(miCopy);
+
+        ml = new MenuListener() {
+            @Override
+            public void menuSelected(MenuEvent e) {
+                miUndo.setEnabled(um.canUndo());
+                lbl.setText("Undo last change|Cut or copy selected text");
+            }
+
+            @Override
+            public void menuDeselected(MenuEvent e) {
+                lbl.setText(DEFAULT_STATUS);
+            }
+
+            @Override
+            public void menuCanceled(MenuEvent e) {
+            }
+        };
+        mEdit.addMenuListener(ml);
         mb.add(mEdit);
 
         JMenu mFormat = new JMenu("Format");
@@ -142,6 +176,16 @@ public class JPad extends JFrame {
             }
         };
         ta.getDocument().addDocumentListener(dl);
+
+        um = new UndoManager();
+        UndoableEditListener uel = new UndoableEditListener() {
+            @Override
+            public void undoableEditHappened(UndoableEditEvent uee) {
+                um.addEdit(uee.getEdit());
+            }
+        };
+        ta.getDocument().addUndoableEditListener(uel);
+
 
         CaretListener cl;
         cl = new CaretListener() {
