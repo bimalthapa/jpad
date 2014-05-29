@@ -2,6 +2,8 @@ package sample;
 
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -13,11 +15,16 @@ public class JPad extends JFrame {
     private static final String SAVE_CHANGES = "Save changes?";
     private static final String TITLE_AYS = "Are you sure?";
     private static final String DEFAULT_STATUS = "JPad 1.0";
+    private final JFileChooser fc;
     private JLabel lbl;
     private JTextArea ta;
     private boolean fDirty;
 
     public JPad(String[] args) {
+
+        fc = new JFileChooser(".");
+        FileFilter ff = new FileNameExtensionFilter("TXT documents (*.txt)", "txt");
+        fc.setFileFilter(ff);
 
         JMenuBar mb = new JMenuBar();
         JMenu mFile = new JMenu("File");
@@ -42,6 +49,13 @@ public class JPad extends JFrame {
 
         JMenuItem miOpen = new JMenuItem("Open");
         miOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_MASK));
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                doOpen();
+            }
+        };
+        miOpen.addActionListener(al);
         mFile.add(miOpen);
 
         JMenuItem miSave = new JMenuItem("Save");
@@ -167,8 +181,13 @@ public class JPad extends JFrame {
 
     private void doOpen(File file) {
         if (file == null) {
-            return;
+            if (fc.showOpenDialog(JPad.this) == JFileChooser.APPROVE_OPTION)
+                file = fc.getSelectedFile();
         }
+
+        if (file == null) return;
+
+        fc.setCurrentDirectory(file.getParentFile());
     }
 
     private void doExit() {
