@@ -172,7 +172,14 @@ public class JPad extends JFrame {
     }
 
     private void doExit() {
-        dispose();
+        if (fDirty) {
+            switch (JOptionPane.showConfirmDialog(JPad.this, SAVE_CHANGES, TITLE_AYS, JOptionPane.YES_NO_OPTION)) {
+                case JOptionPane.YES_OPTION: if (doSave()) dispose(); break;
+                case JOptionPane.NO_OPTION: dispose();
+            }
+        } else {
+            dispose();
+        }
     }
 
     private void doNew() {}
