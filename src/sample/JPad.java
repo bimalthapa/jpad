@@ -365,7 +365,13 @@ public class JPad extends JFrame {
         }
     }
 
-    private void doNew() {}
+    private void doNew() {
+        currentFile = null;
+        ta.setText("");
+        setTitle(DEFAULT_TITLE);
+        fDirty = false;
+        um.discardAllEdits();
+    }
 
     private boolean doSave() {
         if (currentFile == null) {
