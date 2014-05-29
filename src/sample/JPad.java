@@ -7,6 +7,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.undo.UndoManager;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
@@ -132,11 +133,25 @@ public class JPad extends JFrame {
         miCopy.addActionListener(al);
         mEdit.add(miCopy);
 
+        final JMenuItem miPaste = new JMenuItem("Paste");
+        miPaste.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_MASK));
+        miPaste.setEnabled(false);
+
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ta.paste();
+            }
+        };
+        miPaste.addActionListener(al);
+        mEdit.add(miPaste);
+
         ml = new MenuListener() {
             @Override
             public void menuSelected(MenuEvent e) {
                 miUndo.setEnabled(um.canUndo());
-                lbl.setText("Undo last change|Cut or copy selected text");
+                miPaste.setEnabled(cb.isDataFlavorAvailable(DataFlavor.stringFlavor));
+                lbl.setText("Undo last change|Cut or copy selected text|Paste");
             }
 
             @Override
