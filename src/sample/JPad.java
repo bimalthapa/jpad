@@ -8,9 +8,12 @@ import javax.swing.undo.UndoManager;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class JPad extends JFrame {
 
@@ -21,6 +24,7 @@ public class JPad extends JFrame {
     private final JFileChooser fc;
     private final Clipboard cb;
     private final UndoManager um;
+    private final DropTarget dt;
     private JLabel lbl;
     private JTextArea ta;
     private boolean fDirty;
@@ -72,6 +76,13 @@ public class JPad extends JFrame {
         mFile.add(miSaveAs);
         mFile.addSeparator();
         JMenuItem miExit = new JMenuItem("Exit");
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                doExit();
+            }
+        };
+        miExit.addActionListener(al);
         mFile.add(miExit);
 
         MenuListener ml;
@@ -216,6 +227,47 @@ public class JPad extends JFrame {
             }
         };
         ta.addCaretListener(cl);
+
+        DropTargetAdapter dta = new DropTargetAdapter() {
+
+            @Override
+            public void dragOver(DropTargetDragEvent dtde) {
+                Transferable tr = dtde.getTransferable();
+                DataFlavor[] flavors = tr.getTransferDataFlavors();
+                for (DataFlavor flavor : flavors) {
+                    if (flavor.isFlavorJavaFileListType()) {
+                        dtde.acceptDrag(DnDConstants.ACTION_COPY);
+                        return;
+                    }
+                }
+            }
+
+            @Override
+            public void drop(DropTargetDropEvent dtde) {
+                try {
+                    Transferable tr = dtde.getTransferable();
+                    DataFlavor[] flavors = tr.getTransferDataFlavors();
+                    for (DataFlavor flavor : flavors) {
+                        dtde.acceptDrop(DnDConstants.ACTION_COPY);
+                        List<File> files = (List<File>) tr.getTransferData(flavor);
+                        File fileToOpen = files.get(0);
+                        if (fDirty) {
+                            switch (JOptionPane.showConfirmDialog(JPad.this, SAVE_CHANGES, TITLE_AYS, JOptionPane.YES_NO_OPTION)) {
+                                case JOptionPane.YES_OPTION: if (doSave()) doOpen(fileToOpen); break;
+                                case JOptionPane.NO_OPTION: doOpen(fileToOpen);
+                            }
+                        } else {
+                            doOpen(fileToOpen);
+                        }
+                        dtde.dropComplete(true);
+                        um.discardAllEdits();
+                    }
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(JPad.this, "Drop error: " + e.getMessage(), "Alert", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        dt = new DropTarget(ta, dta);
 
         getContentPane().add(lbl = new JLabel(DEFAULT_STATUS), BorderLayout.SOUTH);
         setSize(400, 400);
