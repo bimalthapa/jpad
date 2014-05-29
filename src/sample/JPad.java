@@ -12,6 +12,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.dnd.*;
 import java.awt.event.*;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class JPad extends JFrame {
     private JLabel lbl;
     private JTextArea ta;
     private boolean fDirty;
+    private File currentFile;
 
     public JPad(String[] args) {
         cb = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -299,6 +301,20 @@ public class JPad extends JFrame {
         if (file == null) return;
 
         fc.setCurrentDirectory(file.getParentFile());
+        if (file.toString().indexOf(".") == -1)
+            file = new File(file + ".txt");
+
+        try {
+            ta.setText(read(file));
+            currentFile = file;
+            ta.setCaretPosition(0);
+            ta.requestFocus();
+            setTitle(file.toString() + " - JPad");
+            fDirty = false;
+            um.discardAllEdits();
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(JPad.this, "I/O error: " + e.getMessage(), "Alert", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void doExit() {
@@ -320,8 +336,11 @@ public class JPad extends JFrame {
 
     private void doSaveAs() {}
 
-    private String read(File f) throws IOException{
-        return "";
+    private String read(File f) throws IOException {
+        FileReader fr = new FileReader(f);
+        char[] buffer = new char[(int)f.length()];
+        fr.read(buffer);
+        return new String(buffer);
     }
 
     private void write(File f, String text) throws IOException {}
