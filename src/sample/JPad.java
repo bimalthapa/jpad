@@ -11,9 +11,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 
 public class JPad extends JFrame {
@@ -72,10 +70,25 @@ public class JPad extends JFrame {
 
         JMenuItem miSave = new JMenuItem("Save");
         miSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_MASK));
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                doSave();
+            }
+        };
+        miSave.addActionListener(al);
         mFile.add(miSave);
 
         JMenuItem miSaveAs = new JMenuItem("Save As...");
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                doSaveAs();
+            }
+        };
+        miSaveAs.addActionListener(al);
         mFile.add(miSaveAs);
+
         mFile.addSeparator();
         JMenuItem miExit = new JMenuItem("Exit");
         al = new ActionListener() {
@@ -331,19 +344,69 @@ public class JPad extends JFrame {
     private void doNew() {}
 
     private boolean doSave() {
-        return true;
+        if (currentFile == null) {
+            return doSaveAs();
+        }
+
+        try {
+            write(currentFile, ta.getText());
+            fDirty = false;
+            um.discardAllEdits();
+            return true;
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(JPad.this, "I/O error: " + e.getMessage(), "Alert", JOptionPane.ERROR_MESSAGE);
+        }
+
+        return false;
     }
 
-    private void doSaveAs() {}
+    private boolean doSaveAs() {
+
+        File file;
+        if (fc.showSaveDialog(JPad.this) == JFileChooser.APPROVE_OPTION) {
+            file = fc.getSelectedFile();
+        } else
+            return false;
+
+        fc.setCurrentDirectory(file.getParentFile());
+        if (file.getName().indexOf(".") == -1)
+            file = new File(file + ".txt");
+        try {
+            write(file, ta.getText());
+            currentFile = file;
+            setTitle(file.toString() + " - JPad");
+            fDirty = false;
+            um.discardAllEdits();
+            return true;
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(JPad.this, "I/O error: " + e.getMessage(), "Alert", JOptionPane.ERROR_MESSAGE);
+        }
+
+        return false;
+    }
 
     private String read(File f) throws IOException {
-        FileReader fr = new FileReader(f);
-        char[] buffer = new char[(int)f.length()];
-        fr.read(buffer);
-        return new String(buffer);
+        FileReader fr = null;
+        try {
+            fr = new FileReader(f);
+            char[] buffer = new char[(int) f.length()];
+            fr.read(buffer);
+            return new String(buffer);
+        } finally {
+            if (fr != null) fr.close();
+        }
     }
 
-    private void write(File f, String text) throws IOException {}
+    private void write(File f, String text) throws IOException {
+        PrintWriter pw = null;
+        try {
+            pw = new PrintWriter(new FileWriter(f));
+            pw.print(text);
+            pw.flush();
+        } finally {
+            if (pw != null) pw.close();
+        }
+    }
 
     public static void main(final String[] args) {
         Runnable r = new Runnable() {
