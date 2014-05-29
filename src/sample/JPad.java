@@ -193,8 +193,32 @@ public class JPad extends JFrame {
         mb.add(mEdit);
 
         JMenu mFormat = new JMenu("Format");
-        JCheckBoxMenuItem cbmiWordWrap = new JCheckBoxMenuItem("Word Wrap");
+        final JCheckBoxMenuItem cbmiWordWrap = new JCheckBoxMenuItem("Word Wrap");
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ta.setLineWrap(cbmiWordWrap.isSelected());
+            }
+        };
+        cbmiWordWrap.addActionListener(al);
         mFormat.add(cbmiWordWrap);
+        ml = new MenuListener() {
+            @Override
+            public void menuSelected(MenuEvent e) {
+                lbl.setText("Enable/disable word wrap");
+            }
+
+            @Override
+            public void menuDeselected(MenuEvent e) {
+                lbl.setText(DEFAULT_STATUS);
+            }
+
+            @Override
+            public void menuCanceled(MenuEvent e) {
+
+            }
+        };
+        mFormat.addMenuListener(ml);
         mb.add(mFormat);
 
         setJMenuBar(mb);
