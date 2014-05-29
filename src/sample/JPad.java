@@ -1,10 +1,7 @@
 package sample;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
+import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -77,6 +74,34 @@ public class JPad extends JFrame {
         mFile.addMenuListener(ml);
 
         mb.add(mFile);
+        JMenu mEdit = new JMenu("Edit");
+
+        final JMenuItem miCut = new JMenuItem("Cut");
+        miCut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_MASK));
+        miCut.setEnabled(false);
+
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ta.cut();
+            }
+        };
+        miCut.addActionListener(al);
+        mEdit.add(miCut);
+
+        final JMenuItem miCopy = new JMenuItem("Copy");
+        miCopy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_MASK));
+        miCopy.setEnabled(false);
+
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ta.copy();
+            }
+        };
+        miCopy.addActionListener(al);
+        mEdit.add(miCopy);
+        mb.add(mEdit);
 
         JMenu mFormat = new JMenu("Format");
         JCheckBoxMenuItem cbmiWordWrap = new JCheckBoxMenuItem("Word Wrap");
@@ -103,6 +128,21 @@ public class JPad extends JFrame {
             }
         };
         ta.getDocument().addDocumentListener(dl);
+
+        CaretListener cl;
+        cl = new CaretListener() {
+            @Override
+            public void caretUpdate(CaretEvent e) {
+                if (ta.getSelectedText() != null) {
+                    miCopy.setEnabled(true);
+                    miCut.setEnabled(true);
+                } else {
+                    miCopy.setEnabled(false);
+                    miCut.setEnabled(false);
+                }
+            }
+        };
+        ta.addCaretListener(cl);
 
         getContentPane().add(lbl = new JLabel(DEFAULT_STATUS), BorderLayout.SOUTH);
         setSize(400, 400);
